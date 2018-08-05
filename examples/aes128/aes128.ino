@@ -23,7 +23,7 @@ void loop()
     Serial.print(micros() - start);
     Serial.println(" us.");
     
-  /** /
+    /** /
     // Print all round keys
     unsigned int i,j;
     for(i=0;i<11*4;++i) {
@@ -32,7 +32,7 @@ void loop()
             sprintf(buffer+2*j+8, "%02x", rk[i*4+j]);
         Serial.print(buffer); Serial.println();
     }
-  / **/
+    / **/
 
     start = micros();
     AES_128_encrypt(rk, in, out);
@@ -40,14 +40,14 @@ void loop()
     Serial.print(micros() - start);
     Serial.println(" us.");
     
-  /** /
+    /** /
     // Print ciphertext
     sprintf(buffer, "out: ");
     Serial.print(buffer); Serial.println();
     for(i=0;i<16;++i)
         sprintf(buffer+2*i, "%02x", out[i]);
     Serial.print(buffer); Serial.println();
-  / **/
+    / **/
 
     memcpy(rk+160, key, 16);
 
@@ -57,7 +57,7 @@ void loop()
     Serial.print(micros() - start);
     Serial.println(" us.");
 
-  /** /
+    /** /
     // Print all decryption round keys
     for(i=0;i<11*4;++i) {
         sprintf(buffer, "rk[%2d]: ", i);
@@ -65,7 +65,7 @@ void loop()
             sprintf(buffer+2*j+8, "%02x", rk[i*4+j]);
         Serial.print(buffer); Serial.println();
     }
-  / **/
+    / **/
 
     start = micros();
     AES_128_decrypt(rk, out, in);
@@ -73,13 +73,12 @@ void loop()
     Serial.print(micros() - start);
     Serial.println(" us.");
 
-  /** /
+    /** /
     // Print plaintext
     sprintf(buffer, "in: ");
     Serial.print(buffer); Serial.println();
     for(i=0;i<16;++i)
         sprintf(buffer+2*i, "%02x", in[i]);
     Serial.print(buffer); Serial.println();
- / **/
-
+    / **/
 }
