@@ -1,5 +1,16 @@
 #include <aes-armcortexm.h>
 
+void AES_HexPrint(const uint8_t* data, uint8_t length)
+{
+  char buffer[2 * length + 1];
+  memset(buffer, 0, 2 * length + 1);
+  for (uint16_t i = 0; i < length; ++i)
+  {
+      sprintf(buffer + 2 * i, "%02x", data[i]);
+  }
+  Serial.println(buffer);
+}
+
 void setup()
 {
     Serial.begin(9600);
@@ -7,13 +18,23 @@ void setup()
 
 void loop()
 {
+    // Test vectors from:
+    // https://csrc.nist.gov/Projects/Cryptographic-Algorithm-Validation-Program/Block-Ciphers
     unsigned long start = micros();
-    const uint8_t key[16] = {4,5,6,7,4,5,6,8,4,5,6,9,4,5,6,10};
-    uint8_t in[16] = {0,0,0,0,1,2,3,1,2,4,1,2,5,1,2,6};
+
+    // Page 20 from https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/aes/AESAVS.pdf
+    const uint8_t key[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    uint8_t in[16] = {0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     uint8_t out[16];
+
+    Serial.print("key:    ");
+    AES_HexPrint(key, 16);
+
+    Serial.print("in:     ");
+    AES_HexPrint(in, 16);
+
     
     uint8_t rk[11*16];
-    char buffer[36];
 
     memcpy(rk, key, 16);
 
@@ -25,12 +46,10 @@ void loop()
     
     /** /
     // Print all round keys
-    unsigned int i,j;
-    for(i=0;i<11*4;++i) {
-        sprintf(buffer, "rk[%2d]: ", i);
-        for(j=0;j<4;++j)
-            sprintf(buffer+2*j+8, "%02x", rk[i*4+j]);
-        Serial.print(buffer); Serial.println();
+    for(uint16_t i = 0; i < 11*4; ++i)
+    {
+        Serial.print("rk["); Serial.print(i), Serial.print("]: ");
+        AES_HexPrint(&(rk[i * 4]), 4);
     }
     / **/
 
@@ -40,14 +59,19 @@ void loop()
     Serial.print(micros() - start);
     Serial.println(" us.");
     
-    /** /
+    /**/
     // Print ciphertext
-    sprintf(buffer, "out: ");
-    Serial.print(buffer); Serial.println();
-    for(i=0;i<16;++i)
-        sprintf(buffer+2*i, "%02x", out[i]);
-    Serial.print(buffer); Serial.println();
-    / **/
+    Serial.print("out:    ");
+    AES_HexPrint(out, 16);
+    /**/
+
+    // Verify
+    const uint8_t expected[] = {0x3A, 0xD7, 0x8E, 0x72, 0x6C, 0x1E, 0xC0, 0x2B, 0x7E, 0xBF, 0xE9, 0x2B, 0x23, 0xD9, 0xEC, 0x34};
+    if (memcmp(out, expected, sizeof(expected)) != 0)
+    {
+      Serial.println("Test vector failed.");
+      while(1){};
+    }
 
     memcpy(rk+160, key, 16);
 
@@ -59,11 +83,10 @@ void loop()
 
     /** /
     // Print all decryption round keys
-    for(i=0;i<11*4;++i) {
-        sprintf(buffer, "rk[%2d]: ", i);
-        for(j=0;j<4;++j)
-            sprintf(buffer+2*j+8, "%02x", rk[i*4+j]);
-        Serial.print(buffer); Serial.println();
+    for(uint16_t i = 0; i < 11*4; ++i)
+    {
+        Serial.print("rk["); Serial.print(i), Serial.print("]: ");
+        AES_HexPrint(&(rk[i * 4]), 4);
     }
     / **/
 
@@ -73,12 +96,7 @@ void loop()
     Serial.print(micros() - start);
     Serial.println(" us.");
 
-    /** /
     // Print plaintext
-    sprintf(buffer, "in: ");
-    Serial.print(buffer); Serial.println();
-    for(i=0;i<16;++i)
-        sprintf(buffer+2*i, "%02x", in[i]);
-    Serial.print(buffer); Serial.println();
-    / **/
+    Serial.print("in was: ");
+    AES_HexPrint(in, 16);
 }

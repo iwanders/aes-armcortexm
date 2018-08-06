@@ -1,5 +1,15 @@
 #include <aes-armcortexm.h>
 
+void AES_HexPrint(const uint8_t* data, uint8_t length)
+{
+  char buffer[2 * length + 1];
+  memset(buffer, 0, 2 * length + 1);
+  for (uint16_t i = 0; i < length; ++i)
+  {
+      sprintf(buffer + 2 * i, "%02x", data[i]);
+  }
+  Serial.println(buffer);
+}
 void setup()
 {
     Serial.begin(9600);
@@ -9,21 +19,19 @@ void loop()
 {
     unsigned long start = micros();
 
-    const uint32_t LEN = 256*16;
-    const uint32_t LEN_ROUNDED = ((LEN+15)/16)*16;
+    // Page 55 from https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38a.pdf
 
-    const uint8_t nonce[12] = {1,2,3,1,2,4,1,2,5,1,2,6};
-    const uint8_t key[16] = {4,5,6,7,4,5,6,8,4,5,6,9,4,5,6,10};
-    uint8_t in[LEN];
+    const uint32_t ctr = 0XF3F2F1F0;
+    const uint8_t nonce[12] = {0xF4, 0xF5, 0xF6, 0xF7, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF};
+    const uint8_t key[16] = {0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
+};
+    const uint32_t LEN = 1*16;
+    const uint32_t LEN_ROUNDED = ((LEN+31)/32)*32;
+    uint8_t in[LEN_ROUNDED] = {0};
     uint8_t out[LEN_ROUNDED];
-    
-    unsigned int i;
-    for(i=0;i<LEN;++i)
-        in[i] = i%256;
-    
-    char buffer[36];
+
     AES_128_param p;
-    p.ctr = 0;
+    p.ctr = ctr;
     memcpy(p.nonce, nonce, 12);
     memcpy(p.rk, key, 16);
 
@@ -35,12 +43,10 @@ void loop()
 
     /** /
     // Print all round keys
-    unsigned int j;
-    for(i=0;i<11*4;++i) {
-        sprintf(buffer, "rk[%2d]: ", i);
-        for(j=0;j<4;++j)
-            sprintf(buffer+2*j+8, "%02x", p.rk[i*4+j]);
-        Serial.print(buffer); Serial.println();
+    for(uint16_t i = 0; i < 11*4; ++i)
+    {
+        Serial.print("rk["); Serial.print(i), Serial.print("]: ");
+        AES_HexPrint(&(rk[i * 4]), 4);
     }
     / **/
 
@@ -51,21 +57,20 @@ void loop()
     Serial.println(" us.");
   
     // Print ciphertext
-    sprintf(buffer, "out: ");
-    Serial.print(buffer); Serial.println();
-    for(i=0;i<LEN;++i) {
-        sprintf(buffer+((2*i)%32), "%02x", out[i]);
-        if(i%16 == 15){
-            Serial.print(buffer); Serial.println();
-        }
-    }
-    if(LEN%16 > 0) {
-        Serial.print(buffer); Serial.println();
-    }
+    Serial.print("out:    ");
+    AES_HexPrint(out, LEN);
     
+    // Verify
+    const uint8_t expected[] = {0xEC, 0x8C, 0xDF, 0x73, 0x98, 0x60, 0x7C, 0xB0, 0xF2, 0xD2, 0x16, 0x75, 0xEA, 0x9E, 0xA1, 0xE4};
+    if (memcmp(out, expected, sizeof(expected)) != 0)
+    {
+      Serial.println("Test vector failed.");
+      while(1){};
+    }
+
     /**/
     // Perform decryption
-    p.ctr = 0;
+    p.ctr = ctr;
 
     start = micros();
     AES_128_decrypt_ctr(&p, out, in, LEN);
@@ -74,17 +79,6 @@ void loop()
     Serial.println(" us.");
 
     // Print plaintext
-    sprintf(buffer, "in: ");
-    Serial.print(buffer); Serial.println();
-    for(i=0;i<LEN;++i) {
-        sprintf(buffer+((2*i)%32), "%02x", in[i]);
-        if(i%16 == 15){
-            Serial.print(buffer); Serial.println();
-        }
-    }
-    if(LEN%16 > 0){
-        Serial.print(buffer); Serial.println();
-    }
-
-    delay(1000);
+    Serial.print("in was: ");
+    AES_HexPrint(in, LEN);
 }
