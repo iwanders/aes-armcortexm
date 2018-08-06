@@ -30,14 +30,14 @@ void loop()
     uint8_t in[LEN_ROUNDED] = {0};
     uint8_t out[LEN_ROUNDED];
 
-    AES_128_ctr_param p;
+    AES_128_ctr_bs_param p;
     p.ctr = ctr;
     memcpy(p.nonce, nonce, 12);
-    memcpy(p.rk, key, 16);
+    // memcpy(p.rk, key, 16);
 
     start = micros();
-    AES_128_keyschedule(key, p.rk+16);
-    Serial.print("AES_128_keyschedule: ");
+    AES_128_keyschedule_bs(key, p.rk);
+    Serial.print("AES_128_keyschedule_bs: ");
     Serial.print(micros() - start);
     Serial.println(" us.");
 
@@ -51,8 +51,8 @@ void loop()
     / **/
 
     start = micros();
-    AES_128_encrypt_ctr(&p, in, out, LEN);
-    Serial.print("AES_128_encrypt_ctr: ");
+    AES_128_encrypt_ctr_bs(&p, in, out, LEN);
+    Serial.print("AES_128_encrypt_ctr_bs: ");
     Serial.print(micros() - start);
     Serial.println(" us.");
   
@@ -73,8 +73,8 @@ void loop()
     p.ctr = ctr;
 
     start = micros();
-    AES_128_decrypt_ctr(&p, out, in, LEN);
-    Serial.print("AES_128_decrypt_ctr: ");
+    AES_128_decrypt_ctr_bs(&p, out, in, LEN);
+    Serial.print("AES_128_decrypt_ctr_bs: ");
     Serial.print(micros() - start);
     Serial.println(" us.");
 
