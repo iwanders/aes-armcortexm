@@ -1,5 +1,8 @@
 #include <stdint.h>
 
+// The masked implementation depends on the hardware random number generator
+// in the STM32F407 chip.
+
 typedef struct AES_128_ctr_bs_masked_param {
     uint32_t ctr;
     uint8_t nonce[12];

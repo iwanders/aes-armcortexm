@@ -1,5 +1,10 @@
 #include <aes-armcortexm.h>
 
+//
+// This example will likely only work on STM32F407 chips.
+// The assembly code requires the hardware random source.
+// 
+
 void AES_HexPrint(const uint8_t* data, uint8_t length)
 {
   char buffer[2 * length + 1];
