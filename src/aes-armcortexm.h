@@ -5,5 +5,6 @@
 #include "aes128ctr/aes_128_ctr.h"
 #include "aes128ctrbs/aes_128_ctr_bs.h"
 #include "aes128ctrbsmasked/aes_128_ctr_bs_masked.h"
+#include "aes192ctr/aes_192_ctr.h"
 
 #endif
